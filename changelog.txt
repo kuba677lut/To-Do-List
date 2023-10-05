@@ -1,0 +1,6 @@
+v1
+created simple to-do list project
+added dark mode
+v2
+added month selection for separate to-do list
+added priority of a task

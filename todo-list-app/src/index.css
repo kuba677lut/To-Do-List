@@ -21,6 +21,12 @@ body {
   flex-grow: 1;
 }
 .button{
+  font-size: medium;
+  border-radius: 2rem;
+  color:grey ;
+}
+.month-selector button{
+  font-size: medium;
   border-radius: 2rem;
   color:grey ;
 }

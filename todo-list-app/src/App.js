@@ -4,33 +4,50 @@ import TaskForm from './TaskForm';
 import LocalStorage from './LocalStorage';
 import './App.css';
 import DarkModeButton from './DarkModeButton';
+import MonthSelector from './MonthSelector';
 
 function App() {
   const [tasks, setTasks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Add a loading state
-  const [darkMode, setDarkMode] = useState(false); // Add dark mode state
+  const [isLoading, setIsLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [tasksByMonth, setTasksByMonth] = useState({});
 
   useEffect(() => {
-    // Load tasks from localStorage when the component mounts
-    const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    setTasks(savedTasks);
-    setIsLoading(false); // Set loading to false once tasks are loaded
+    const savedTasksByMonth = JSON.parse(localStorage.getItem('tasksByMonth')) || {};
+    setTasksByMonth(savedTasksByMonth);
+    setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (selectedMonth) {
+      setTasks(tasksByMonth[selectedMonth] || []);
+    }
+  }, [selectedMonth, tasksByMonth]);
+
   const addTask = (task) => {
-    setTasks([...tasks, { ...task, completed: false }]);
+    const updatedTasksByMonth = { ...tasksByMonth };
+    if (!updatedTasksByMonth[selectedMonth]) {
+      updatedTasksByMonth[selectedMonth] = [];
+    }
+    updatedTasksByMonth[selectedMonth].push({ ...task, completed: false });
+    setTasksByMonth(updatedTasksByMonth);
+    localStorage.setItem('tasksByMonth', JSON.stringify(updatedTasksByMonth));
   };
+  
 
   const toggleTask = (index) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].completed = !updatedTasks[index].completed;
-    setTasks(updatedTasks);
+    const updatedTasksByMonth = { ...tasksByMonth };
+    updatedTasksByMonth[selectedMonth][index].completed = !updatedTasksByMonth[selectedMonth][index].completed;
+    setTasksByMonth(updatedTasksByMonth);
+    localStorage.setItem('tasksByMonth', JSON.stringify(updatedTasksByMonth));
   };
 
   const deleteTask = (index) => {
-    const updatedTasks = [...tasks];
-    updatedTasks.splice(index, 1); // Remove the task at the specified index
-    setTasks(updatedTasks);
+    const updatedTasksByMonth = { ...tasksByMonth };
+    updatedTasksByMonth[selectedMonth].splice(index, 1);
+    setTasksByMonth(updatedTasksByMonth);
+    localStorage.setItem('tasksByMonth', JSON.stringify(updatedTasksByMonth));
   };
 
   const toggleDarkMode = () => {
@@ -38,19 +55,25 @@ function App() {
     document.body.classList.toggle('dark-mode', darkMode);
   };
 
+  const onMonthSelect = (month) => {
+    setSelectedMonth(month);
+  };
+
   return (
     <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
-      <h1>Todo List</h1>
+      <h1>To-do List</h1>
       <DarkModeButton darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <MonthSelector selectedMonth={selectedMonth} onMonthSelect={onMonthSelect} />
       {isLoading ? (
-        <p>Loading...</p>
-      ) : (
+        <p>Ładowanie...</p>
+      ) : selectedMonth ? (
         <>
-          {/* Include the LocalStorage component */}
-          <LocalStorage tasks={tasks} setTasks={setTasks} />
+          <LocalStorage tasks={tasks} setTasks={setTasks} selectedMonth={selectedMonth} />
           <TaskForm addTask={addTask} />
           <TaskList tasks={tasks} toggleTask={toggleTask} deleteTask={deleteTask} />
         </>
+      ) : (
+        <p>Wybierz miesiąc, aby utworzyć listę rzeczy do zrobienia</p>
       )}
     </div>
   );
